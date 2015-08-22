@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 버튼 눌림 여부에 따라 버튼 이미지 바꿈 -->
+    <item android:state_pressed="true"
+        android:drawable="@drawable/capture_button_pressed" />
+    <item android:state_pressed="false"
+        android:drawable="@drawable/capture_button" />
+</selector><!-- From: file:/D:/Projects/CameraMoving/app/src/main/res/drawable/button_selector.xml -->

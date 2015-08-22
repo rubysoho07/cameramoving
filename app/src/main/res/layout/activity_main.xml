@@ -1,0 +1,13 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+    <!-- 기본적으로는 위, 아래, 좌우로 margin이 설정되어 있음. 필요 없으면 지울 것. -->
+
+    <!-- 카메라의 Preview 화면. 위의 화면과 겹치는 부분임. -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/cameraPreviewFrame" />
+
+</LinearLayout>

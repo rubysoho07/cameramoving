@@ -41,6 +41,9 @@ public class MainActivity extends ActionBarActivity {
 
     private static final String IMGBTN_TAG = "Capture button";
 
+    /* 사진 저장 및 프리뷰 재시작을 위한 Callback */
+    private Camera.PictureCallback picCallback;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,36 +85,40 @@ public class MainActivity extends ActionBarActivity {
         // Long-click listener 설정
         captureImgButton.setOnLongClickListener(new MyClickListener());
 
+        /* PictureCallback */
+        picCallback = new Camera.PictureCallback() {
+
+            @Override
+            public void onPictureTaken(byte[] data, Camera camera) {
+                File pictureFile = getOutputMediaFile();
+                if (pictureFile == null){
+                    Log.d("CameraMoving", "Error creating media file, check storage permissions.");
+                    return;
+                }
+
+                try {
+                    FileOutputStream fos = new FileOutputStream(pictureFile);
+                    fos.write(data);
+                    fos.close();
+
+                    // 갤러리에 보이도록 하기 위해 MediaScanner 호출.
+                    MediaScanning scanning = new MediaScanning(getApplicationContext(), pictureFile);
+                } catch (FileNotFoundException e) {
+                    Log.d("CameraMoving", "File not found: " + e.getMessage());
+                } catch (IOException e) {
+                    Log.d("CameraMoving", "Error accessing file: " + e.getMessage());
+                }
+
+                // restart preview.
+                camera.startPreview();
+            }
+        };
+
         /* 촬영 버튼 기능 */
         captureImgButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                cameraView.capture(new Camera.PictureCallback() {
-                    @Override
-                    public void onPictureTaken(byte[] data, Camera camera) {
-                        File pictureFile = getOutputMediaFile();
-                        if (pictureFile == null){
-                            Log.d("CameraMoving", "Error creating media file, check storage permissions.");
-                            return;
-                        }
-
-                        try {
-                            FileOutputStream fos = new FileOutputStream(pictureFile);
-                            fos.write(data);
-                            fos.close();
-
-                            // 갤러리에 보이도록 하기 위해 MediaScanner 호출.
-                            MediaScanning scanning = new MediaScanning(getApplicationContext(), pictureFile);
-                        } catch (FileNotFoundException e) {
-                            Log.d("CameraMoving", "File not found: " + e.getMessage());
-                        } catch (IOException e) {
-                            Log.d("CameraMoving", "Error accessing file: " + e.getMessage());
-                        }
-
-                        // restart preview.
-                        camera.startPreview();
-                    }
-                });
+                cameraView.capture(picCallback);
             }
         });
 
@@ -205,6 +212,7 @@ public class MainActivity extends ActionBarActivity {
         @Override
         public void surfaceCreated(SurfaceHolder holder) {
             camera = Camera.open();
+            Camera.Parameters camParam = camera.getParameters();
 
             /* 처음 실행 시 미리보기가 회전되어 나오는 문제 해결을 위함. */
             int activityOrientation =
@@ -213,17 +221,14 @@ public class MainActivity extends ActionBarActivity {
             if (activityOrientation == Configuration.ORIENTATION_LANDSCAPE) {    // 가로
                 camera.setDisplayOrientation(0);
                 /* 촬영 시 기울여져 나오는 문제 있어서 추가함. */
-                Camera.Parameters camParam = camera.getParameters();
                 camParam.setRotation(0);
-                camera.setParameters(camParam);
             }
             else if (activityOrientation == Configuration.ORIENTATION_PORTRAIT) {// 세로
                 camera.setDisplayOrientation(90);
                 /* 촬영 시 기울여져 나오는 문제 있어서 추가함. */
-                Camera.Parameters camParam = camera.getParameters();
                 camParam.setRotation(90);
-                camera.setParameters(camParam);
             }
+            camera.setParameters(camParam);
             try {
                 camera.setPreviewDisplay(mHolder);
             } catch (Exception e) {
@@ -245,7 +250,14 @@ public class MainActivity extends ActionBarActivity {
 
         public boolean capture(Camera.PictureCallback handler) {
             if (camera != null) {
-                camera.takePicture(null, null, handler);
+                /* for autofocus */
+                camera.autoFocus(new Camera.AutoFocusCallback() {
+                    @Override
+                    public void onAutoFocus(boolean success, Camera camera) {
+                        camera.takePicture(null, null, picCallback);
+                    }
+                });
+
                 return true;
             } else {
                 return false;

@@ -7,6 +7,11 @@
     android:id="@+id/upper_lay">
 
     <!--
+        [Yungon Park. 15.09.02]
+        전/후면 카메라 전환 버튼 배치.
+
+    -->
+    <!--
         [Yungon Park. 15.06.14]
         캡처용 버튼을 배치함
         layout_centerHorizontal : 수평에서 중간 정렬
@@ -21,4 +26,16 @@
         android:contentDescription="@string/cap_img_description"
         android:layout_marginBottom="10dp"
         android:background="@drawable/button_selector" />
+
+    <ImageButton
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:id="@+id/switchCamButton"
+        android:contentDescription="@string/switch_cam"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="15dp"
+        android:background="@drawable/switch_button_selector"/>
 </RelativeLayout>

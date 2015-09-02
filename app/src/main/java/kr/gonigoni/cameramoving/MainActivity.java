@@ -36,10 +36,15 @@ public class MainActivity extends ActionBarActivity {
 
     /* 사진 촬영을 위한 이미지 버튼 */
     private ImageButton captureImgButton;
+
+    /* 전 후면 카메라 전환을 위한 이미지 버튼 */
+    private ImageButton switchCamButton;
+
     /* 카메라 미리 보기를 위한 SurfaceView */
     CameraSurfaceView cameraView;
 
     private static final String IMGBTN_TAG = "Capture button";
+    private static final String SWICAMBTN_TAG = "Switch Camera button";
 
     /* 사진 저장 및 프리뷰 재시작을 위한 Callback */
     private Camera.PictureCallback picCallback;
@@ -75,9 +80,15 @@ public class MainActivity extends ActionBarActivity {
         /* 이제 진짜 겹침. 두 번째 argument에 null이 들어가면 안 됨. */
         win.addContentView(upper, upperParams);
 
+        // 촬영 버튼을 객체로 만듦.
         captureImgButton = (ImageButton) findViewById(R.id.captureButton);
         // 버튼에 tag 설정
         captureImgButton.setTag(IMGBTN_TAG);
+
+        // 카메라 전환 버튼을 객체로 만듦.
+        switchCamButton = (ImageButton) findViewById(R.id.switchCamButton);
+        // 버튼에 tag 설정
+        switchCamButton.setTag(SWICAMBTN_TAG);
 
         // 버튼 위치 옮기기를 위해 DragListener 지정.
         findViewById(R.id.upper_lay).setOnDragListener(new MyDragListener(this));
@@ -119,6 +130,14 @@ public class MainActivity extends ActionBarActivity {
             @Override
             public void onClick(View v) {
                 cameraView.capture(picCallback);
+            }
+        });
+
+        /* 전/후면 카메라 전환 기능 */
+        switchCamButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                /* TODO: 전/후면 카메라 전환 기능 구현 */
             }
         });
 

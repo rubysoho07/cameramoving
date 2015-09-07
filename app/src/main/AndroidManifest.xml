@@ -19,7 +19,8 @@
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
-            android:configChanges="orientation|screenSize">
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait">
             <!-- android:screenOrientation="portrait" 는 화면 방향 세로 고정의 목적으로 사용됨. -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

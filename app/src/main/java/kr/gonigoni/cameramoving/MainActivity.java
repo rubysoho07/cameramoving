@@ -56,6 +56,11 @@ public class MainActivity extends ActionBarActivity {
         Window win = getWindow();
         win.setContentView(R.layout.activity_main);
 
+        /* Status bar 숨기기. 해당 기능은 Android 4.1 이후에서 지원함. */
+        View decorView = getWindow().getDecorView();
+        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
+
         /* ActionBar 숨기기 */
         if (getSupportActionBar() != null)
             getSupportActionBar().hide();

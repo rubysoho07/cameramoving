@@ -238,6 +238,8 @@ public class MainActivity extends ActionBarActivity {
             camera = Camera.open();
             Camera.Parameters camParam = camera.getParameters();
 
+            /* TODO: 시작 시 센서 위치 읽어서 사진 방향 설정. */
+
             /* 처음 실행 시 미리보기가 회전되어 나오는 문제 해결을 위함. */
             int activityOrientation =
                     currentActivity.getResources().getConfiguration().orientation;
@@ -338,12 +340,15 @@ public class MainActivity extends ActionBarActivity {
             int firstX, firstY;
             int lastX, lastY;
             int screenWidth, screenHeight;
-            View view;
+
+            View view = (View) event.getLocalState();
+            //Log.i("CameraMoving", "view is " + view.toString());    // ImageButton
             ViewGroup viewGroup;
             RelativeLayout upperView;
             ViewGroup.MarginLayoutParams buttonParam;
             SharedPreferences pref;
             SharedPreferences.Editor prefEditor;
+            RelativeLayout.LayoutParams exitParam = (RelativeLayout.LayoutParams) view.getLayoutParams();
 
             // 원래 위치를 구함.
             firstX = (int) v.getX();
@@ -375,8 +380,7 @@ public class MainActivity extends ActionBarActivity {
                     //Log.i("CameraMoving", "ACTION_DRAG_EXITED");
                     //Log.i("CameraMoving", "(exited) Old position : " + Float.toString(firstX) + "," + Float.toString(firstY));
                     //Log.i("CameraMoving", "(exited) New position : " + Float.toString(event.getX()) + "," + Float.toString(event.getY()));
-                    /* 위치 초기화 */
-                    view = (View) event.getLocalState();
+
                     //Log.i("CameraMoving", "view is " + view.toString());    // ImageButton
                     viewGroup = (ViewGroup) view.getParent();
                     //Log.i("CameraMoving", "viewGroup is " + viewGroup.toString());  // RelativeLayout
@@ -385,8 +389,6 @@ public class MainActivity extends ActionBarActivity {
 
                     // argument로 온 v는 ImageButton의 상위 view임.
                     upperView = (RelativeLayout) v;
-
-                    RelativeLayout.LayoutParams exitParam = (RelativeLayout.LayoutParams) view.getLayoutParams();
 
                     exitParam.addRule(RelativeLayout.CENTER_HORIZONTAL);
                     exitParam.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
@@ -420,35 +422,39 @@ public class MainActivity extends ActionBarActivity {
                     //Log.i("CameraMoving", "New position : " + Float.toString(event.getX()) + "," + Float.toString(event.getY()));
                     //Log.i("CameraMoving", "Width : " + Integer.toString(screenWidth) + " Height : " + Integer.toString(screenHeight));
 
-                    /* 75 = image button size */
-                    lastX = (int) event.getX() - firstX - 75;
-                    if (lastX < 0)                          /* 맨 왼쪽 */
-                        lastX = 0;
-                    else if (screenWidth - (int) event.getX() < 150)      /* 맨 오른쪽 */
-                        lastX = screenWidth - 150;
 
-                    lastY = (int) event.getY() - firstY - 75;
-
-                    if (lastY < 0)                              /* 맨 위쪽 */
-                        lastY = 0;
-                    else if (screenHeight - (int) event.getY() < 150)         /* 맨 아래쪽 */
-                        lastY = screenHeight - 200;
-
-                    view = (View) event.getLocalState();
-                    //Log.i("CameraMoving", "view is " + view.toString());    // ImageButton
                     viewGroup = (ViewGroup) view.getParent();
                     //Log.i("CameraMoving", "viewGroup is " + viewGroup.toString());  // RelativeLayout
-                    // 기존의 ImageButton은 지움.
-                    viewGroup.removeView(view);
-
-                    // argument로 온 v는 ImageButton의 상위 view임.
-                    upperView = (RelativeLayout) v;
-
                     // 버튼에 대한 Parameter 설정.
                     buttonParam = new ViewGroup.MarginLayoutParams(view.getLayoutParams());
 
-                    buttonParam.setMargins(lastX, lastY, 0, 0);
-                    view.setLayoutParams(new RelativeLayout.LayoutParams(buttonParam));
+                    /* 75 = image button size */
+                    lastX = (int) event.getX() - firstX - 75;
+                    lastY = (int) event.getY() - firstY - 75;
+
+                    // 기존의 ImageButton은 지움.
+                    viewGroup.removeView(view);
+
+                    if (lastX < 0 || screenWidth - (int) event.getX() < 150) {
+                        /* 맨 왼쪽 || 맨 오른쪽 --> 초기화 */
+                        exitParam.addRule(RelativeLayout.CENTER_HORIZONTAL);
+                        exitParam.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+                        exitParam.setMargins(0, 0, 0, 20);
+                        view.setLayoutParams(exitParam);
+                    } else if (lastY < 0 || screenHeight - (int) event.getY() < 150) {
+                        /* 맨 위쪽 || 맨 아래쪽 --> 초기화 */
+                        exitParam.addRule(RelativeLayout.CENTER_HORIZONTAL);
+                        exitParam.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+                        exitParam.setMargins(0, 0, 0, 20);
+                        view.setLayoutParams(exitParam);
+                    } else {
+                        /* 그 이외의 경우 */
+                        buttonParam.setMargins(lastX, lastY, 0, 0);
+                        view.setLayoutParams(new RelativeLayout.LayoutParams(buttonParam));
+                    }
+
+                    // argument로 온 v는 ImageButton의 상위 view임.
+                    upperView = (RelativeLayout) v;
 
                     // 버튼을 다시 추가.
                     upperView.addView(view);

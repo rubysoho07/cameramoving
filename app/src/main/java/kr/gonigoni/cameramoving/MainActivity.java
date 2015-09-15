@@ -435,13 +435,13 @@ public class MainActivity extends ActionBarActivity {
                     // 기존의 ImageButton은 지움.
                     viewGroup.removeView(view);
 
-                    if (lastX < 0 || screenWidth - (int) event.getX() < 150) {
+                    if (lastX < 0 || screenWidth - (int) event.getX() < 75) {
                         /* 맨 왼쪽 || 맨 오른쪽 --> 초기화 */
                         exitParam.addRule(RelativeLayout.CENTER_HORIZONTAL);
                         exitParam.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
                         exitParam.setMargins(0, 0, 0, 20);
                         view.setLayoutParams(exitParam);
-                    } else if (lastY < 0 || screenHeight - (int) event.getY() < 150) {
+                    } else if (lastY < 0 || screenHeight - (int) event.getY() < 75) {
                         /* 맨 위쪽 || 맨 아래쪽 --> 초기화 */
                         exitParam.addRule(RelativeLayout.CENTER_HORIZONTAL);
                         exitParam.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
@@ -449,6 +449,12 @@ public class MainActivity extends ActionBarActivity {
                         view.setLayoutParams(exitParam);
                     } else {
                         /* 그 이외의 경우 */
+
+                        /* 전/후면 카메라와 겹치지 않게 버튼 배치 */
+                        if (lastX < 60) lastX = 90;
+                        if (lastY < 60) lastY = 90;
+
+                        /* Margin 설정 */
                         buttonParam.setMargins(lastX, lastY, 0, 0);
                         view.setLayoutParams(new RelativeLayout.LayoutParams(buttonParam));
                     }

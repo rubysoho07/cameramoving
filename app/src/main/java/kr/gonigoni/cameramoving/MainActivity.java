@@ -451,9 +451,10 @@ public class MainActivity extends ActionBarActivity {
                         /* 그 이외의 경우 */
 
                         /* 전/후면 카메라와 겹치지 않게 버튼 배치 */
-                        if (lastX < 60) lastX = 90;
-                        if (lastY < 60) lastY = 90;
-
+                        if (lastX < 60 && lastY < 60) {
+                            if (lastX < 60) lastX = 90;
+                            if (lastY < 60) lastY = 90;
+                        }
                         /* Margin 설정 */
                         buttonParam.setMargins(lastX, lastY, 0, 0);
                         view.setLayoutParams(new RelativeLayout.LayoutParams(buttonParam));

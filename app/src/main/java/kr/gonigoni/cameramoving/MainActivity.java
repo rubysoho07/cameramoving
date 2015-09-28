@@ -435,7 +435,7 @@ public class MainActivity extends ActionBarActivity {
                     prefEditor.putInt("firstX", 0);
                     prefEditor.putInt("firstY", 0);
 
-                    prefEditor.commit();
+                    prefEditor.apply();
 
                     break;
 
@@ -509,7 +509,7 @@ public class MainActivity extends ActionBarActivity {
                     prefEditor.putInt("firstX", lastX);
                     prefEditor.putInt("firstY", lastY);
 
-                    prefEditor.commit();
+                    prefEditor.apply();
 
                     break;
 

@@ -5,6 +5,7 @@ import android.content.ClipDescription;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.hardware.Camera;
 import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
@@ -49,6 +50,33 @@ public class MainActivity extends ActionBarActivity {
     /* 사진 저장 및 프리뷰 재시작을 위한 Callback */
     private Camera.PictureCallback picCallback;
 
+    /**
+     * This method converts dp unit to equivalent pixels, depending on device density.
+     *
+     * @param dp A value in dp (density independent pixels) unit. Which we need to convert into pixels
+     * @param context Context to get resources and device specific display metrics
+     * @return A float value to represent px equivalent to dp depending on device density
+     */
+    public static float convertDpToPixel(float dp, Context context){
+        Resources resources = context.getResources();
+        DisplayMetrics metrics = resources.getDisplayMetrics();
+        float px = dp * (metrics.densityDpi / 160f);
+        return px;
+    }
+
+    /**
+     * This method converts device specific pixels to density independent pixels.
+     *
+     * @param px A value in px (pixels) unit. Which we need to convert into db
+     * @param context Context to get resources and device specific display metrics
+     * @return A float value to represent dp equivalent to px value
+     */
+    public static float convertPixelsToDp(float px, Context context){
+        Resources resources = context.getResources();
+        DisplayMetrics metrics = resources.getDisplayMetrics();
+        float dp = px / (metrics.densityDpi / 160f);
+        return dp;
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -418,8 +446,8 @@ public class MainActivity extends ActionBarActivity {
                     //Log.i("CameraMoving", "V is " + v.toString());
 
                     /* 이 때의 Position을 저장해야 함. */
-                    //Log.i("CameraMoving", "Old position : " + Float.toString(firstX) + "," + Float.toString(firstY));
-                    //Log.i("CameraMoving", "New position : " + Float.toString(event.getX()) + "," + Float.toString(event.getY()));
+                    Log.i("CameraMoving", "Old position : " + Float.toString(firstX) + "," + Float.toString(firstY));
+                    Log.i("CameraMoving", "New position : " + Float.toString(event.getX()) + "," + Float.toString(event.getY()));
                     //Log.i("CameraMoving", "Width : " + Integer.toString(screenWidth) + " Height : " + Integer.toString(screenHeight));
 
 
@@ -449,12 +477,19 @@ public class MainActivity extends ActionBarActivity {
                         view.setLayoutParams(exitParam);
                     } else {
                         /* 그 이외의 경우 */
+                        // pixel 기준으로 오는 것을 dp로 변환
+                        float lastXdp = currentActivity.convertPixelsToDp((float) lastX, currentActivity.getApplicationContext());
+                        float lastYdp = currentActivity.convertPixelsToDp((float) lastY, currentActivity.getApplicationContext());
+                        Log.i("CameraMoving", "lastXdp: " + lastXdp + " lastYdp: " + lastYdp);
 
                         /* 전/후면 카메라와 겹치지 않게 버튼 배치 */
-                        if (lastX < 60 && lastY < 60) {
-                            if (lastX < 60) lastX = 90;
-                            if (lastY < 60) lastY = 90;
+                        if (lastXdp < 60f && lastYdp < 60f) {
+                            if (lastXdp < 60f)
+                                lastX = (int) currentActivity.convertDpToPixel(50f, currentActivity.getApplicationContext());
+                            if (lastYdp < 60f)
+                                lastY = (int) currentActivity.convertDpToPixel(50f, currentActivity.getApplicationContext());
                         }
+
                         /* Margin 설정 */
                         buttonParam.setMargins(lastX, lastY, 0, 0);
                         view.setLayoutParams(new RelativeLayout.LayoutParams(buttonParam));

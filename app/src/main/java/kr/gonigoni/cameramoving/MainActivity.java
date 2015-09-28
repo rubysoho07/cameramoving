@@ -7,6 +7,10 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.hardware.Camera;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -33,7 +37,7 @@ import java.util.Date;
 import java.util.Locale;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements SensorEventListener {
 
     /* 사진 촬영을 위한 이미지 버튼 */
     private ImageButton captureImgButton;
@@ -49,6 +53,15 @@ public class MainActivity extends ActionBarActivity {
 
     /* 사진 저장 및 프리뷰 재시작을 위한 Callback */
     private Camera.PictureCallback picCallback;
+
+    /* Sensor 관련 객체 */
+    SensorManager m_sensor_manager;
+    Sensor m_acc_sensor, m_mag_sensor;
+
+    /* Sensor 데이터를 저장할 변수들 */
+    float[] m_acc_data = null, m_mag_data = null;
+    float[] m_rotation = new float[9];
+    float[] m_result_data = new float[3];
 
     /**
      * This method converts dp unit to equivalent pixels, depending on device density.
@@ -77,6 +90,7 @@ public class MainActivity extends ActionBarActivity {
         float dp = px / (metrics.densityDpi / 160f);
         return dp;
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -185,6 +199,32 @@ public class MainActivity extends ActionBarActivity {
             buttonParams.setMargins(pref.getInt("firstX", 0), pref.getInt("firstY", 0), 0, 0);
             captureImgButton.setLayoutParams(new RelativeLayout.LayoutParams(buttonParams));
         }
+
+        /* 시스템 서비스로부터 SensorManager 객체를 얻음 */
+        m_sensor_manager = (SensorManager) getSystemService(SENSOR_SERVICE);
+
+        /* SensorManager를 이용하여 가속 센서와 자기장 센서 객체를 얻음 */
+        m_acc_sensor = m_sensor_manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        m_mag_sensor = m_sensor_manager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+    }
+
+    /* 이 Activity가 포커스를 잃으면, 리스너 해제. (어차피 센서 데이터를 얻어도 소용 없으므로) */
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        // 리스너 해제
+        m_sensor_manager.unregisterListener(this);
+    }
+
+    /* 이 Activity가 포커스를 얻으면, 가속 데이터와 자기장 데이터를 얻도록 리스너 등록 */
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // 센서 값을 이 Context에서 받도록 리스너 등록
+        m_sensor_manager.registerListener(this, m_acc_sensor, SensorManager.SENSOR_DELAY_UI);
+        m_sensor_manager.registerListener(this, m_mag_sensor, SensorManager.SENSOR_DELAY_UI);
     }
 
     /* 파일으로 사진 저장 */
@@ -209,21 +249,6 @@ public class MainActivity extends ActionBarActivity {
         return mediaFile;
     }
 
-    /* 회전 시 카메라 방향 설정을 위함. */
-    /* TODO : 화면 회전 시 delay 없도록. */
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-
-        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            // 가로 전환 시
-            cameraView.setCamOrientation(0);
-        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-            // 세로 전환 시
-            cameraView.setCamOrientation(90);
-        }
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -246,6 +271,47 @@ public class MainActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    /* 센서 좌표 변경 시 이 함수 수정. 측정한 값을 전달함. */
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            // 가속 센서가 전달한 데이터인 경우 수치 데이터 복사.
+            m_acc_data = event.values.clone();
+        } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+            // 자기장 센서가 전달한 데이터인 경우 수치 데이터 복사.
+            m_mag_data = event.values.clone();
+        }
+
+        // 데이터가 존재하는 경우
+        if (m_acc_data != null && m_mag_data != null) {
+            // 가속 데이터와 자기장 데이터로 회전 매트릭스를 얻음.
+            SensorManager.getRotationMatrix(m_rotation, null, m_acc_data, m_mag_data);
+            // 회전 매트릭스로 방향 데이터를 얻는다.
+            SensorManager.getOrientation(m_rotation, m_result_data);
+
+            // radian 값을 degree 값으로 변경한다.
+            m_result_data[0] = (float)Math.toDegrees(m_result_data[0]);
+
+            // 변경한 값이 0보다 작으면, 360을 더함.
+            if (m_result_data[0] < 0) m_result_data[0] += 360;
+
+            // 우리는 방위값만 필요함. 방위값에 따라 네 가지 경우로 나누어 줌.
+            if (m_result_data[0] >= 45f && m_result_data[0] < 135f)
+                cameraView.setCamOrientation(90);
+            else if (m_result_data[0] >= 135f && m_result_data[0] < 225f)
+                cameraView.setCamOrientation(180);
+            else if (m_result_data[0] >= 225f && m_result_data[0] < 315f)
+                cameraView.setCamOrientation(270);
+            else
+                cameraView.setCamOrientation(0);
+        }
+
+    }
+
+    /* Sensor 정확도 변경 시 호출되는 method. 거의 호출될 일 없음. */
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) { }
+
     /* 카메라 미리보기를 위한 SurfaceView 정의 */
     private class CameraSurfaceView extends SurfaceView implements SurfaceHolder.Callback {
         private SurfaceHolder mHolder;
@@ -266,18 +332,12 @@ public class MainActivity extends ActionBarActivity {
             camera = Camera.open();
             Camera.Parameters camParam = camera.getParameters();
 
-            /* TODO: 시작 시 센서 위치 읽어서 사진 방향 설정. */
-
             /* 처음 실행 시 미리보기가 회전되어 나오는 문제 해결을 위함. */
             int activityOrientation =
                     currentActivity.getResources().getConfiguration().orientation;
 
-            if (activityOrientation == Configuration.ORIENTATION_LANDSCAPE) {    // 가로
-                camera.setDisplayOrientation(0);
-                /* 촬영 시 기울여져 나오는 문제 있어서 추가함. */
-                camParam.setRotation(0);
-            }
-            else if (activityOrientation == Configuration.ORIENTATION_PORTRAIT) {// 세로
+            // 세로 방향에서 시작함. 이렇게 하지 않으면 처음 실행 시 미리보기가 회전되어 나옴.
+            if (activityOrientation == Configuration.ORIENTATION_PORTRAIT) {
                 camera.setDisplayOrientation(90);
                 /* 촬영 시 기울여져 나오는 문제 있어서 추가함. */
                 camParam.setRotation(90);
@@ -321,12 +381,14 @@ public class MainActivity extends ActionBarActivity {
         /**
          * 처음 실행 시 카메라 미리보기가 제대로 표시 안 됨.
          * 회전 시에도 문제 생기므로 다음 method 추가 */
-        public void setCamOrientation (int value){
-            camera.setDisplayOrientation(value);
-            /* 촬영 시 기울여져 나오는 문제 있어서 추가함. */
-            Camera.Parameters camParam = camera.getParameters();
-            camParam.setRotation(value);
-            camera.setParameters(camParam);
+        public void setCamOrientation (int value) {
+            /* 처음 시작하면 camera가 null임. camera가 null이 아닌 때부터 회전 각도 적용되도록 함. */
+            if (camera != null) {
+                /* 촬영 시 기울여져 나오는 문제 있어서 추가함. */
+                Camera.Parameters camParam = camera.getParameters();
+                camParam.setRotation(value);
+                camera.setParameters(camParam);
+            }
         }
     }
 
@@ -478,16 +540,16 @@ public class MainActivity extends ActionBarActivity {
                     } else {
                         /* 그 이외의 경우 */
                         // pixel 기준으로 오는 것을 dp로 변환
-                        float lastXdp = currentActivity.convertPixelsToDp((float) lastX, currentActivity.getApplicationContext());
-                        float lastYdp = currentActivity.convertPixelsToDp((float) lastY, currentActivity.getApplicationContext());
+                        float lastXdp = convertPixelsToDp((float) lastX, currentActivity.getApplicationContext());
+                        float lastYdp = convertPixelsToDp((float) lastY, currentActivity.getApplicationContext());
                         Log.i("CameraMoving", "lastXdp: " + lastXdp + " lastYdp: " + lastYdp);
 
                         /* 전/후면 카메라와 겹치지 않게 버튼 배치 */
                         if (lastXdp < 60f && lastYdp < 60f) {
                             if (lastXdp < 60f)
-                                lastX = (int) currentActivity.convertDpToPixel(50f, currentActivity.getApplicationContext());
+                                lastX = (int) convertDpToPixel(50f, currentActivity.getApplicationContext());
                             if (lastYdp < 60f)
-                                lastY = (int) currentActivity.convertDpToPixel(50f, currentActivity.getApplicationContext());
+                                lastY = (int) convertDpToPixel(50f, currentActivity.getApplicationContext());
                         }
 
                         /* Margin 설정 */
@@ -503,7 +565,7 @@ public class MainActivity extends ActionBarActivity {
                     view.setVisibility(View.VISIBLE);
 
                     /* 위치를 저장함 */
-                    pref = getSharedPreferences("buttonPosition", currentActivity.MODE_PRIVATE);
+                    pref = getSharedPreferences("buttonPosition", MODE_PRIVATE);
                     prefEditor = pref.edit();
 
                     prefEditor.putInt("firstX", lastX);

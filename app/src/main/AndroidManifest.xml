@@ -2,8 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="kr.gonigoni.cameramoving">
 
-    <!-- 카메라를 쓰기 위해 추가함. 아래 줄은 카메라가 없으면 동작 안 하도록 하기 위함.-->
+    <!-- 카메라를 쓰기 위해 추가함. -->
     <uses-feature android:name="android.hardware.camera"/>
+    <!-- 전면 카메라를 쓰기 위해 추가함. -->
+    <uses-feature android:name="android.hardware.camera.front"/>
+    <!-- 카메라가 없으면 동작 안 하도록 하기 위함. -->
     <uses-feature android:name="android.hardware.camera.autofocus"/>
     <!-- 이것도 마찬가지. -->
     <uses-permission android:name="android.permission.CAMERA" />

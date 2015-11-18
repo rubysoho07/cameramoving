@@ -63,12 +63,11 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     float[] m_rotation = new float[9];
     float[] m_result_data = new float[3];
 
+    /* 전면 카메라 사용 중인지 여부 */
+    private boolean isUsingFrontCam = false;
+
     /**
-     * This method converts dp unit to equivalent pixels, depending on device density.
-     *
-     * @param dp A value in dp (density independent pixels) unit. Which we need to convert into pixels
-     * @param context Context to get resources and device specific display metrics
-     * @return A float value to represent px equivalent to dp depending on device density
+     * "dp" 단위를 "pixel"로 변경.
      */
     public static float convertDpToPixel(float dp, Context context){
         Resources resources = context.getResources();
@@ -78,11 +77,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     }
 
     /**
-     * This method converts device specific pixels to density independent pixels.
-     *
-     * @param px A value in px (pixels) unit. Which we need to convert into db
-     * @param context Context to get resources and device specific display metrics
-     * @return A float value to represent dp equivalent to px value
+     * "pixel" 단위를 "dp" 단위로 변경.
      */
     public static float convertPixelsToDp(float px, Context context){
         Resources resources = context.getResources();
@@ -184,7 +179,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         switchCamButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /* TODO: 전/후면 카메라 전환 기능 구현 */
+                isUsingFrontCam = cameraView.toggleCamera(isUsingFrontCam);
             }
         });
 
@@ -357,6 +352,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
         @Override
         public void surfaceDestroyed(SurfaceHolder holder) {
+            // 프리뷰 종료 시 카메라 사용이 끝났다고 간주, 리소스 반환.
             camera.stopPreview();
             camera.release();
             camera = null;
@@ -389,6 +385,46 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 camParam.setRotation(value);
                 camera.setParameters(camParam);
             }
+        }
+
+        /* 전/후면 카메라 전환하는 method */
+        public boolean toggleCamera (boolean isFront) {
+            // 카메라의 수 얻기
+            int numOfCams = Camera.getNumberOfCameras();
+            boolean temp = isFront;
+
+            if (numOfCams >= 2) {
+                if (isFront) {
+                    // 전면 카메라 사용 중 -> 후면으로 전환
+                    // 1. 기존 카메라 프리뷰는 중지.
+                    camera.stopPreview();
+                    camera.release();
+
+                    // 2. 카메라 전환
+                    camera = Camera.open(Camera.CameraInfo.CAMERA_FACING_BACK);
+                    temp = false;
+                } else {
+                    // 후면 카메라 사용 중 -> 전면으로 전환
+                    // 1. 기존 카메라 프리뷰는 중지.
+                    camera.stopPreview();
+                    camera.release();
+
+                    // 2. 카메라 전환.
+                    camera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
+                    temp = true;
+                }
+
+                // 3. Preview 시작.
+                try {
+                    camera.setDisplayOrientation(90);
+                    camera.setPreviewDisplay(mHolder);
+                    camera.startPreview();
+                } catch (Exception e) {
+                    Log.d("CameraMoving", "Can't set camera preview.");
+                }
+            }
+
+            return temp;
         }
     }
 

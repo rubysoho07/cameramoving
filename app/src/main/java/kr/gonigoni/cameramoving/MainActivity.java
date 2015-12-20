@@ -360,7 +360,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
         public boolean capture(Camera.PictureCallback handler) {
             if (camera != null) {
-                /* for autofocus */
+                /* To support auto focus when you take picture. */
                 camera.autoFocus(new Camera.AutoFocusCallback() {
                     @Override
                     public void onAutoFocus(boolean success, Camera camera) {

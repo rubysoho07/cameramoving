@@ -52,7 +52,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     private static final String SWICAMBTN_TAG = "Switch Camera button";
 
     /* 사진 저장 및 프리뷰 재시작을 위한 Callback */
-    private Camera.PictureCallback picCallback;
+    private static Camera.PictureCallback picCallback;
 
     /* Sensor 관련 객체 */
     SensorManager m_sensor_manager;
@@ -269,6 +269,8 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     /* 센서 좌표 변경 시 이 함수 수정. 측정한 값을 전달함. */
     @Override
     public void onSensorChanged(SensorEvent event) {
+
+
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             // 가속 센서가 전달한 데이터인 경우 수치 데이터 복사.
             m_acc_data = event.values.clone();
@@ -494,19 +496,12 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
                 // 드래그 포인트가 View의 bounding box에 들어갔을 때
                 case DragEvent.ACTION_DRAG_ENTERED:
-                    // change the shape of the view?
-                    //Log.i("CameraMoving", "ACTION_DRAG_ENTERED");
-                    //Log.i("CameraMoving", "Old position : " + Float.toString(firstX) + "," + Float.toString(firstY));
                     /* 이 시점에서 position이 저장되기 시작. */
                     //Log.i("CameraMoving", "New position : " + Float.toString(event.getX()) + "," + Float.toString(event.getY()));
                     break;
 
                 // 유저가 View의 bounding box 바깥으로 drag shadow를 옮겼을 때
                 case DragEvent.ACTION_DRAG_EXITED:
-                    //Log.i("CameraMoving", "ACTION_DRAG_EXITED");
-                    //Log.i("CameraMoving", "(exited) Old position : " + Float.toString(firstX) + "," + Float.toString(firstY));
-                    //Log.i("CameraMoving", "(exited) New position : " + Float.toString(event.getX()) + "," + Float.toString(event.getY()));
-
                     //Log.i("CameraMoving", "view is " + view.toString());    // ImageButton
                     viewGroup = (ViewGroup) view.getParent();
                     //Log.i("CameraMoving", "viewGroup is " + viewGroup.toString());  // RelativeLayout
@@ -613,10 +608,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
                 // drag and drop이 완전히 끝났을 때
                 case DragEvent.ACTION_DRAG_ENDED:
-                    /*Log.i("CameraMoving", "ACTION_DRAG_ENDED");
                     //이 때는 position이 저장 안 됨.
-                    Log.i("CameraMoving", "Old position : " + Float.toString(firstX) + "," + Float.toString(firstY));
-                    Log.i("CameraMoving", "New position : " + Float.toString(event.getX()) + "," + Float.toString(event.getY()));*/
                     break;
 
                 default:

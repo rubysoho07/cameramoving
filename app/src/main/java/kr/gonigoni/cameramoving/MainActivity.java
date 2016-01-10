@@ -307,14 +307,15 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             if (m_result_data[0] < 0) m_result_data[0] += 360;
 
             // 우리는 방위값만 필요함. 방위값에 따라 네 가지 경우로 나누어 줌.
-            if (m_result_data[0] >= 45f && m_result_data[0] < 135f)
-                cameraView.setCamOrientation(90);
-            else if (m_result_data[0] >= 135f && m_result_data[0] < 225f)
+            // 주석으로 표시한 방향은 단말기의 위가 어디에 있는지에 따른 기준임.
+            if (m_result_data[0] >= 45f && m_result_data[0] < 135f)         // 세로, 위
                 cameraView.setCamOrientation(180);
-            else if (m_result_data[0] >= 225f && m_result_data[0] < 315f)
+            else if (m_result_data[0] >= 135f && m_result_data[0] < 225f)   // 가로, 오른쪽
                 cameraView.setCamOrientation(270);
-            else
+            else if (m_result_data[0] >= 225f && m_result_data[0] < 315f)   // 세로, 아래
                 cameraView.setCamOrientation(0);
+            else                                                            // 가로, 왼쪽
+                cameraView.setCamOrientation(90);
 
             // Set debugging text.
             txtAzimuth.setText("Azimuth: " + String.format("%.6f", m_result_data[0]));

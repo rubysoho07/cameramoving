@@ -300,6 +300,8 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
             // radian 값을 degree 값으로 변경한다.
             m_result_data[0] = (float)Math.toDegrees(m_result_data[0]);
+            m_result_data[1] = (float)Math.toDegrees(m_result_data[1]);
+            m_result_data[2] = (float)Math.toDegrees(m_result_data[2]);
 
             // 변경한 값이 0보다 작으면, 360을 더함.
             if (m_result_data[0] < 0) m_result_data[0] += 360;

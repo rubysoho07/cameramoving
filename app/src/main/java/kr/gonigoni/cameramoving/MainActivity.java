@@ -28,6 +28,8 @@ import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -62,6 +64,11 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     float[] m_acc_data = null, m_mag_data = null;
     float[] m_rotation = new float[9];
     float[] m_result_data = new float[3];
+
+    /* Debugging을 위한 TextView */
+    private TextView txtAzimuth;
+    private TextView txtPitch;
+    private TextView txtRoll;
 
     /* 전면 카메라 사용 중인지 여부 */
     private boolean isUsingFrontCam = false;
@@ -201,6 +208,11 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         /* SensorManager를 이용하여 가속 센서와 자기장 센서 객체를 얻음 */
         m_acc_sensor = m_sensor_manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         m_mag_sensor = m_sensor_manager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+
+        /* Debugging TextView 설정 */
+        txtAzimuth = (TextView) findViewById(R.id.textAzimuth);
+        txtPitch = (TextView) findViewById(R.id.textPitch);
+        txtRoll = (TextView) findViewById(R.id.textRoll);
     }
 
     /* 이 Activity가 포커스를 잃으면, 리스너 해제. (어차피 센서 데이터를 얻어도 소용 없으므로) */
@@ -301,6 +313,11 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 cameraView.setCamOrientation(270);
             else
                 cameraView.setCamOrientation(0);
+
+            // Set debugging text.
+            txtAzimuth.setText("Azimuth: " + String.format("%.6f", m_result_data[0]));
+            txtPitch.setText("Pitch: " + String.format("%.6f", m_result_data[1]));
+            txtRoll.setText("Roll: " + String.format("%.6f", m_result_data[2]));
         }
 
     }

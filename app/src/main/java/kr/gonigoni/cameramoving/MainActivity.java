@@ -554,6 +554,8 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
                 // drag가 끝났을 때, 드래그 포인트가 View의 bounding box 내에 있을 때
                 case DragEvent.ACTION_DROP:
+                    /* Is button position initialized? */
+                    boolean isInitialized = false;
                     /* 위치를 구해서 고정함 */
                     //Log.i("CameraMoving", "ACTION_DROP");
                     //Log.i("CameraMoving", "V is " + v.toString());
@@ -582,12 +584,14 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                         exitParam.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
                         exitParam.setMargins(0, 0, 0, 20);
                         view.setLayoutParams(exitParam);
+                        isInitialized = true;
                     } else if (lastY < 0 || screenHeight - (int) event.getY() < 75) {
                         /* 맨 위쪽 || 맨 아래쪽 --> 초기화 */
                         exitParam.addRule(RelativeLayout.CENTER_HORIZONTAL);
                         exitParam.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
                         exitParam.setMargins(0, 0, 0, 20);
                         view.setLayoutParams(exitParam);
+                        isInitialized = true;
                     } else {
                         /* 그 이외의 경우 */
                         // pixel 기준으로 오는 것을 dp로 변환
@@ -619,9 +623,13 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                     pref = getSharedPreferences("buttonPosition", MODE_PRIVATE);
                     prefEditor = pref.edit();
 
-                    prefEditor.putInt("firstX", lastX);
-                    prefEditor.putInt("firstY", lastY);
-
+                    if (isInitialized) {
+                        prefEditor.putInt("firstX", 0);
+                        prefEditor.putInt("firstY", 0);
+                    } else {
+                        prefEditor.putInt("firstX", lastX);
+                        prefEditor.putInt("firstY", lastY);
+                    }
                     prefEditor.apply();
 
                     break;
